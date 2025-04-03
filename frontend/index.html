@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Notes App</title>
+</head>
+
+<script>
+  function loadNotes() {
+    // const editableList = document.getElementById('editable-list');
+
+    // while (editableList.firstChild) {
+    //   editableList.removeChild(editableList.firstChild);
+    // }
+
+    // const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    // notes.forEach((note) => {
+    //   const listItem = document.createElement('li');
+    //   listItem.textContent = note.content;
+    //   listItem.setAttribute('contenteditable', true);
+    //   editableList.appendChild(listItem);
+    // });
+
+
+    // let res_json = '[{"id":2,"content":"Updated Note","created_at":"2025-04-03 01:58:51","updated_at":"2025-04-03 01:58:51"},{"id":3,"content":"Learn Express_9","created_at":"2025-04-03 02:03:08","updated_at":"2025-04-03 02:03:08"},{"id":4,"content":"Learn Express_10","created_at":"2025-04-03 02:03:32","updated_at":"2025-04-03 02:03:32"},{"id":5,"content":"Learn Express_11","created_at":"2025-04-03 02:06:17","updated_at":"2025-04-03 02:06:17"}]';
+    // const notesArray = parseJSONToArray(res_json);
+    // console.log(notesArray);
+  }
+
+  function UpdateList(notesArray) {
+    const editableList = document.getElementById('editable-list');
+
+    while (editableList.firstChild) {
+      editableList.removeChild(editableList.firstChild);  // 移除所有子元素
+    }
+
+    notesArray.forEach((note) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = note.content;
+      listItem.setAttribute('contenteditable', true);
+      editableList.appendChild(listItem);
+    })
+
+  }
+
+  function parseJSONToArray(jsonString) {
+    try {
+      // console.log(jsonString);
+      const parsedData = JSON.parse(jsonString);
+      return parsedData;
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return []; // Return an empty array if parsing fails
+    }
+  }
+  function onClick_btnRead() {
+    fetch('http://localhost:3000/api/notes')
+      .then(res => res.json())
+      .then(notesArray => {
+        console.log(notesArray);
+        UpdateList(notesArray);
+      })
+      .catch(error => {
+        console.error('Error fetching notes:', error);
+      });
+  }
+</script>
+
+<body onload="loadNotes();">
+  <h1>Welcome to Simple Notes App</h1>
+  <div>
+    <button onclick="onClick_btnRead();">Read</button>
+    <!-- <button>New</button>
+    <button>Update</button>
+    <button>Delete</button> -->
+  </div>
+
+  <div class="list-container">
+    <ul id="editable-list">
+      <li contenteditable="true">Sample Note 1</li>
+      <li contenteditable="true">Sample Note 2</li>
+      <li contenteditable="true">Sample Note 3</li>
+    </ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

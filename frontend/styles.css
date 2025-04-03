@@ -1,0 +1,83 @@
+:root {
+  /* sets the base font size */
+  font-size: 3.5vw;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: cadetblue;
+  margin: 7%;
+  padding: 0;
+
+}
+
+div {
+  display: flex;
+  justify-content: center;
+
+  padding: 3px;
+}
+
+.list-container {
+  width: 80vw;
+  justify-content: left;
+}
+
+ul {
+  width: 100%;
+}
+
+li {
+  padding: 0.5rem 0.2rem 0;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+  text-align: left;
+  width: 100%;
+}
+
+button {
+  font-size: 1rem;
+
+  border: 0;
+  border-radius: 0.3rem;
+  background-color: darkcyan;
+
+  width: 5rem;
+  height: 3rem;
+  margin: 3px;
+
+  cursor: pointer;
+}
+
+button:hover {
+  color: white;
+  background-color: darkgreen;
+}
+
+button:active {
+  background-color: darkslategray;
+}
+
+@media (max-width: 768px) {
+  :root {
+    font-size: 3.5vw;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  :root {
+    font-size: 2vw;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    font-size: 1.5vw;
+  }
+}
+
+@media (pointer: coarse) {
+  button:hover {
+    /* override hover styles for touchscreens */
+    background-color: darkcyan;
+  }
+}

@@ -1,30 +1,31 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require("path");  // 引入 path 模組
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const FRONTEND_FOLDER = '../frontend/';
 
 // Middleware
 app.use(cors());               // 允許跨域請求
 app.use(express.json());       // 解析 JSON 請求
 app.use(bodyParser.json());
 
-// 測試路由
-app.get('/', (req, res) => {
-  res.send('Simple Notes API is running!');
-});
+// 提供靜態文件（HTML、CSS、JS）
+app.use(express.static(path.join(__dirname, FRONTEND_FOLDER)));
 
 // 啟動伺服器
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-// 捕捉 Ctrl + C 訊號來正確關閉伺服器
+// Properly close the server on Ctrl + C signal
 process.on("SIGINT", () => {
-  console.log("正在關閉伺服器...");
+  console.log("Closing server...");
   server.close(() => {
-    console.log("伺服器已關閉");
+    console.log("Server closed");
     process.exit(0);
   });
 });
