@@ -31,7 +31,7 @@ li {
   padding: 0.5rem 0.2rem 0;
   border-bottom: 3px solid rgba(0, 0, 0, 0.1);
   text-align: left;
-  width: 100%;
+  width: 90%;
 }
 
 button {
@@ -55,6 +55,34 @@ button:hover {
 
 button:active {
   background-color: darkslategray;
+}
+
+#btnDelete,
+.test-delete-btn {
+  float: right;
+  height: 1.4rem;
+  transform: translateY(-0.3rem);
+
+  margin: 0;
+  background-color: darkred;
+
+  /* disable select and edit */
+  /* Safari */
+  -webkit-user-select: none;
+  /* IE 10 and IE 11 */
+  -ms-user-select: none;
+  /* Standard syntax */
+  user-select: none;
+
+  cursor: pointer;
+}
+
+.delete-btn {
+  display: none;
+}
+
+li:focus .delete-btn {
+  display: block;
 }
 
 @media (max-width: 768px) {

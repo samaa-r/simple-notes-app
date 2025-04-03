@@ -9,46 +9,108 @@
 </head>
 
 <script>
+  let notesArray = []; // Global variable
+  let focused_li_id = null;  // Last <li> been focused
+
   function loadNotes() {
-    // const editableList = document.getElementById('editable-list');
-
-    // while (editableList.firstChild) {
-    //   editableList.removeChild(editableList.firstChild);
-    // }
-
-    // const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-    // notes.forEach((note) => {
-    //   const listItem = document.createElement('li');
-    //   listItem.textContent = note.content;
-    //   listItem.setAttribute('contenteditable', true);
-    //   editableList.appendChild(listItem);
-    // });
-
-
-    // let res_json = '[{"id":2,"content":"Updated Note","created_at":"2025-04-03 01:58:51","updated_at":"2025-04-03 01:58:51"},{"id":3,"content":"Learn Express_9","created_at":"2025-04-03 02:03:08","updated_at":"2025-04-03 02:03:08"},{"id":4,"content":"Learn Express_10","created_at":"2025-04-03 02:03:32","updated_at":"2025-04-03 02:03:32"},{"id":5,"content":"Learn Express_11","created_at":"2025-04-03 02:06:17","updated_at":"2025-04-03 02:06:17"}]';
-    // const notesArray = parseJSONToArray(res_json);
-    // console.log(notesArray);
+    cmdRead();
   }
 
-  function UpdateList(notesArray) {
+  function CreateNote(content) {
+    const lastLI = document.querySelector('#editable-list li:last-child');
+
+    if ((content === '') && (lastLI !== null) && (lastLI.textContent === '')) {
+      lastLI.focus();
+      return;
+    }
+
+    const noteContent = content;
+    const note = { id: -1, content: noteContent };
+    notesArray.push(note);
+
+    addList(note.id, note.content);
+
+    const listItem = document.querySelector('#editable-list li:last-child');
+    listItem.focus();
+
+  }
+
+  function UpdateList(data) {
+    notesArray = data; // Update global variable
+    // console.log(notesArray);
+
+    clearList();
+
+    notesArray.forEach((note) => {
+      addList(note.id, note.content);
+    })
+  }
+
+  function clearList() {
     const editableList = document.getElementById('editable-list');
 
     while (editableList.firstChild) {
       editableList.removeChild(editableList.firstChild);  // 移除所有子元素
     }
+  }
 
-    notesArray.forEach((note) => {
-      const listItem = document.createElement('li');
-      listItem.textContent = note.content;
-      listItem.setAttribute('contenteditable', true);
-      editableList.appendChild(listItem);
-    })
+  function addList(id, content) {
+    const editableList = document.getElementById('editable-list');
+    const listItem = document.createElement('li');
+    listItem.textContent = content;
+    listItem.setAttribute('contenteditable', true);
+    listItem.setAttribute('data-id', id);
+    if (id >= 0)
+      listItem.addEventListener('focus', onFocus_li);
+    listItem.addEventListener('blur', loseFocus_li);
+    editableList.appendChild(listItem);
+  }
+  function onFocus_li() {
+    // const button = document.createElement('button');
+    // button.id = 'btnDelete';
+    // button.textContent = 'Delete';
+    // button.onclick = function () {
+    //   // Define button action here
+    //   console.log('Delete button clicked');
+    // };
+    // this.appendChild(button);
+  }
 
+  function loseFocus_li() {
+
+    // // if 'btnDelete' exists, remove it
+    // if (this.querySelector('#btnDelete')) {
+    //   this.removeChild(this.querySelector('#btnDelete'));
+    // }
+
+    const id = this.getAttribute('data-id');
+
+    // if (id) {
+    //   console.log(id);
+    // } else {
+    //   console.log("no id");
+    //   // remove "this"
+    //   const editableList = document.getElementById('editable-list');
+    //   editableList.removeChild(this);
+    // }
+
+    if ((!id) || (id < 0)) {
+      if (this.textContent === '') {
+        const editableList = document.getElementById('editable-list');
+        editableList.removeChild(this);
+        focused_li_id = null;
+      } else {
+        SaveNote(id, this.textContent);
+        focused_li_id = id;
+      }
+    } else {
+      SaveNote(id, this.textContent);
+      focused_li_id = id;
+    }
   }
 
   function parseJSONToArray(jsonString) {
     try {
-      // console.log(jsonString);
       const parsedData = JSON.parse(jsonString);
       return parsedData;
     } catch (error) {
@@ -56,15 +118,101 @@
       return []; // Return an empty array if parsing fails
     }
   }
-  function onClick_btnRead() {
+  function SaveNote(id, content) {
+    // console.log('notesArray: ', notesArray);
+    const existingNote = notesArray.find(note => note.id == id); // Use loose equality to fix id matching
+
+    // console.log('existingNote: ', existingNote, 'id: ', id, 'content: ', content);
+    if ((id < 0) && (content !== '')) {
+      cmdCreate(content);
+    } else if (existingNote && (existingNote.content !== content)) {
+      if (content === '')
+        cmdDelete(id);
+      else
+        cmdUpdate(id, content);
+    }
+    // console.log('do nothing');
+  }
+
+  function DeleteSelectedNote() {
+
+    if (focused_li_id >= 0) {
+      cmdDelete(focused_li_id);
+    }
+  }
+
+  function cmdCreate(content) {
+    console.log('create ', content);
+    fetch('http://127.0.0.1:3000/api/notes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          console.warn('Warning creating note:', data);
+        } else {
+          cmdRead();
+        }
+      })
+      .catch(error => {
+        console.error('Error creating note:', error);
+      });
+  }
+  function cmdRead() {
+    console.log('read');
     fetch('http://localhost:3000/api/notes')
       .then(res => res.json())
-      .then(notesArray => {
-        console.log(notesArray);
-        UpdateList(notesArray);
+      .then(data => {
+        if (data.error) {
+          console.warn('Warning fetching note:', data);
+        } else {
+          UpdateList(data);
+        }
       })
       .catch(error => {
         console.error('Error fetching notes:', error);
+      });
+  }
+  function cmdUpdate(id, content) {
+    console.log('update ' + id);
+    fetch(`http://localhost:3000/api/notes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          console.warn('Warning updating note:', data);
+        } else {
+          cmdRead();
+        }
+      })
+      .catch(error => {
+        console.error('Error updating note:', error);
+      });
+  }
+  function cmdDelete(id) {
+    console.log('delete ' + id);
+    fetch(`http://localhost:3000/api/notes/${id}`, {
+      method: 'DELETE'
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          console.warn('Warning deleting note:', data);
+        } else {
+          cmdRead();
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting note:', error);
       });
   }
 </script>
@@ -72,17 +220,17 @@
 <body onload="loadNotes();">
   <h1>Welcome to Simple Notes App</h1>
   <div>
-    <button onclick="onClick_btnRead();">Read</button>
-    <!-- <button>New</button>
-    <button>Update</button>
-    <button>Delete</button> -->
+    <!-- <button onclick="cmdRead();">Read</button> -->
+    <button onclick="CreateNote('');">New</button>
+    <!-- <button>Update</button> -->
+    <!-- <button onclick="DeleteSelectedNote();">Delete</button> -->
   </div>
 
   <div class="list-container">
     <ul id="editable-list">
-      <li contenteditable="true">Sample Note 1</li>
-      <li contenteditable="true">Sample Note 2</li>
-      <li contenteditable="true">Sample Note 3</li>
+      <li contenteditable="true" data-id="1">Sample Note 1</li>
+      <li contenteditable="true" data-id="2">Sample Note 2</li>
+      <li contenteditable="true" data-id="3">Sample Note 3</li>
     </ul>
   </div>
 
