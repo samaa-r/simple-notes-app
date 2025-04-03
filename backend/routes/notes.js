@@ -7,38 +7,66 @@ const eHttpStatusCode = Object.freeze({
 
 const express = require('express');
 const router = express.Router();
+const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 
-let notes = []; // 模擬記錄 (之後可改為資料庫)
+const DB_FILE = './database/notes.db';
+const SCHEMA_FILE = './database/migrations/schema.sql';
+let db; // 定義 db 變數
 
-// 取得所有記事
-router.get('/', (req, res) => {
-  res.json(notes);
-});
+if (!fs.existsSync(DB_FILE)) {
+  console.log('資料庫檔案不存在，正在初始化...');
+  const schema = fs.readFileSync(SCHEMA_FILE, 'utf8');
+  db = new sqlite3.Database(DB_FILE); // 初始化 db 變數
+  db.exec(schema, (err) => {
+    if (err) {
+      console.error('初始化資料庫失敗:', err);
+    } else {
+      console.log('資料庫初始化成功！');
+    }
+  });
+} else {
+  console.log('資料庫檔案已經存在，正在連接...');
+  db = new sqlite3.Database(DB_FILE); // 初始化 db 變數
+}
 
-// 新增記事
+
+// **1️⃣ 建立 (Create)**
 router.post('/', (req, res) => {
-  const newNote = { id: Date.now(), text: req.body.text };
-  notes.push(newNote);
-  res.status(eHttpStatusCode.CREATED).json(newNote);
+  const { content } = req.body;
+  db.run('INSERT INTO notes (content) VALUES (?)', [content], function (err) {
+    if (err) return res.status(eHttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: err.message });
+    res.json({ id: db.lastID, content });
+  });
 });
 
-// 更新記事
+// **2️⃣ 讀取 (Read)**
+router.get('/', (req, res) => {
+  db.all('SELECT * FROM notes', [], (err, rows) => {
+    if (err) return res.status(eHttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// **3️⃣ 更新 (Update)**
 router.put('/:id', (req, res) => {
-  const noteId = parseInt(req.params.id);
-  const note = notes.find(n => n.id === noteId);
-  if (note) {
-    note.text = req.body.text;
-    res.json(note);
-  } else {
-    res.status(eHttpStatusCode.NOT_FOUND).json({ message: "Note not found" });
-  }
+  const { content } = req.body;
+  const { id } = req.params;
+  db.run('UPDATE notes SET content = ? WHERE id = ?', [content, id], function (err) {
+    if (err) return res.status(eHttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: err.message });
+    if (this.changes === 0) return res.status(eHttpStatusCode.NOT_FOUND).json({ message: 'Note not found' });
+    res.json({ message: 'Note updated' });
+  });
 });
 
-// 刪除記事
+// **4️⃣ 刪除 (Delete)**
 router.delete('/:id', (req, res) => {
-  const noteId = parseInt(req.params.id);
-  notes = notes.filter(n => n.id !== noteId);
-  res.json({ message: "Note deleted" });
+  const { id } = req.params;
+  db.run('DELETE FROM notes WHERE id = ?', [id], function (err) {
+    if (err) return res.status(eHttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: err.message });
+    if (this.changes === 0) return res.status(eHttpStatusCode.NOT_FOUND).json({ message: 'Note not found' });
+    res.json({ message: 'Note deleted' });
+  });
 });
 
 module.exports = router;

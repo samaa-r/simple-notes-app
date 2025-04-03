@@ -1,12 +1,14 @@
 const express = require('express');
-// const cors = require('cors');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-// app.use(cors());               // 允許跨域請求
+app.use(cors());               // 允許跨域請求
 app.use(express.json());       // 解析 JSON 請求
+app.use(bodyParser.json());
 
 // 測試路由
 app.get('/', (req, res) => {

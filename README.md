@@ -23,7 +23,7 @@ simple-notes-app/
 │── database/                # 資料庫
 │   ├── notes.db             # SQLite 資料庫檔案
 │   ├── migrations/          # 資料庫初始化與遷移
-│       ├── init.sql         # 建立資料表的 SQL 指令
+│       ├── schema.sql       # 建立資料表的 SQL 指令
 │
 │── README.md                # 專案說明文件
 │── .gitignore               # 忽略不該提交的檔案（node_modules、database/notes.db）
